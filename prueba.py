@@ -9,13 +9,12 @@ import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-def cargar_datos(ruta, columnas):
-    datos = pd.read_csv(ruta)
-    return datos[columnas]
+def cargar_datos(ruta):
+    return pd.read_csv(ruta)
 
-def regresion_polinomica_grafico(ax, datos, orden_polinomio, columnas, label_error=None):
-    X = datos[columnas[0]].values.reshape(-1, 1)
-    y = datos[columnas[1]].values
+def regresion_polinomica_grafico(ax, datos, orden_polinomio, label_error=None):
+    X = datos.iloc[:, 0].values.reshape(-1, 1)
+    y = datos.iloc[:, 1].values
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -31,8 +30,8 @@ def regresion_polinomica_grafico(ax, datos, orden_polinomio, columnas, label_err
     mse = mean_squared_error(y_test, y_pred)
 
     if orden_polinomio == usuario_orden or orden_polinomio == mejor_orden:
-        ax.scatter(X_test, y_pred, color='black', label=f'Predicciones - Orden {orden_polinomio}')
-        ax.scatter(X, y, color='pink', label='Datos reales')
+        ax.scatter(X_test, y_pred, color='red', label=f'Predicciones - Orden {orden_polinomio}')
+        ax.scatter(X, y, color='blue', label='Datos reales')
         ax.set_title(f'Regresión Polinómica - Orden {orden_polinomio}')
         ax.set_xlabel('Variable independiente')
         ax.set_ylabel('Variable dependiente')
@@ -69,10 +68,10 @@ def crear_interfaz_grafica():
     entry_orden = ttk.Entry(ventana)
     entry_orden.grid(row=0, column=1, padx=10, pady=10)
 
-    btn_mostrar_grafico = ttk.Button(ventana, text="Mostrar gráfico solicitado", command=lambda: mostrar_grafico(int(entry_orden.get())))
+    btn_mostrar_grafico = ttk.Button(ventana, text="Mostrar Gráfico", command=lambda: mostrar_grafico(int(entry_orden.get())))
     btn_mostrar_grafico.grid(row=1, column=0, columnspan=2, pady=10)
 
-    btn_mostrar_mejor_grafico = ttk.Button(ventana, text="Mostrar gráfico con menor error posible", command=mostrar_mejor_grafico)
+    btn_mostrar_mejor_grafico = ttk.Button(ventana, text="Mostrar Mejor Gráfico", command=mostrar_mejor_grafico)
     btn_mostrar_mejor_grafico.grid(row=2, column=0, columnspan=2, pady=10)
 
     btn_limpiar = ttk.Button(ventana, text="Limpiar", command=lambda: limpiar(entry_orden, label_error_usuario, label_error_mejor))
@@ -91,7 +90,7 @@ def mostrar_grafico(orden):
     if 1 <= orden <= 20:
         limpiar_grafico(ax_usuario, label_error_usuario)
         usuario_orden = orden
-        mse_usuario = regresion_polinomica_grafico(ax_usuario, datos, orden, columnas, label_error_usuario)
+        mse_usuario = regresion_polinomica_grafico(ax_usuario, datos, orden, label_error_usuario)
         canvas_usuario.draw()
         print(f"Error cuadrático medio para polinomio de orden {orden}: {mse_usuario}")
     else:
@@ -105,22 +104,21 @@ def mostrar_mejor_grafico():
 
     for orden in range(1, 21):
         if orden != usuario_orden:
-            mse = regresion_polinomica_grafico(ax_mejor, datos, orden, columnas, label_error_mejor)
+            mse = regresion_polinomica_grafico(ax_mejor, datos, orden, label_error_mejor)
 
             if mse is not None and mse < menor_error:
                 mejor_orden = orden
                 menor_error = mse
 
     if mejor_orden != 0:
-        regresion_polinomica_grafico(ax_mejor, datos, mejor_orden, columnas, label_error_mejor)
+        regresion_polinomica_grafico(ax_mejor, datos, mejor_orden, label_error_mejor)
 
     canvas_mejor.draw()
     print(f"El polinomio con orden {mejor_orden} tiene el menor error cuadrático medio: {menor_error}")
 
 if __name__ == "__main__":
-    archivo_csv = 'DATASET2AGUA.csv'
-    columnas = ['X', 'Y']
-    datos = cargar_datos(archivo_csv, columnas)
+    archivo_csv = 'DATASET1AGUA.csv'
+    datos = cargar_datos(archivo_csv)
 
     ventana, entry_orden, label_error_usuario, label_error_mejor = crear_interfaz_grafica()
 
